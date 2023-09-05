@@ -35,5 +35,5 @@ __Run project for development__
 Install dependencies  
 - `npm install`  
 
-Run project in browser    
+Run project in browser @ `http://localhost:4200/`   
 - `npm run start`  
