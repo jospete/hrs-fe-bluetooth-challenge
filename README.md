@@ -19,7 +19,7 @@ Send us a link to your project on GitHub with any instructions as well as detail
 Include screenshots for the visuals of your project (as we won't have the device on hand)
 Include any commentary that you would like us to know
 
-__Requirements for Running this Repo__
+__Requirements for Running this Repo__  
 Node >=16 & NPM - `nvm install 16` - https://github.com/nvm-sh/nvm  
 Ionic CLI - `npm i -g @ionic/cli`  
 
