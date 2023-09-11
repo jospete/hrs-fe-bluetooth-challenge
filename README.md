@@ -38,4 +38,23 @@ Install dependencies
 Run project in browser @ `http://localhost:4200/`   
 - `npm run start`
 
+Run On Android
+
+__Add Android Platform__
+- `npm install @capacitor/android`
+- `npx cap add android`
+
+*If this fails telling you that you need to add a www assets folder; please add one and drop in a copy of the index.html from the src/ folder
+
+__Open Android Studio__
+- Confirm you are using the embedded JDK of 11 or above
+- Run the build and run directly on device
+
+__Make Changes to the Src Files__
+- `npm run build`
+- `npx cap copy`
+- Re-run on the device from Android Studio
+
+Documentation for reference: https://capacitorjs.com/docs/android
+
 If you are more comfortable completing the challenge in a native Android application, feel free to do so. 
