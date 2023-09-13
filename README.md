@@ -43,8 +43,7 @@ Run On Android
 __Add Android Platform__
 - `npm install @capacitor/android`
 - `npx cap add android`
-
-*If this fails telling you that you need to add a www assets folder; please add one and drop in a copy of the index.html from the src/ folder
+- Ensure that you have a www/ assets folder in the root; please add one and drop in a copy of the index.html from the src/ folder
 
 __Open Android Studio__
 - Confirm you are using the embedded JDK of 11 or above
