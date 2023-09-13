@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {BluetoothLeWeb} from "@capacitor-community/bluetooth-le/dist/esm/web";
 
 @Component({
   selector: 'app-home',
@@ -7,6 +8,12 @@ import { Component } from '@angular/core';
 })
 export class HomePage {
 
-  constructor() {}
+  constructor(
+      private BluetoothLeWeb: BluetoothLeWeb
+  ) {}
 
+    //Todo remove and update as needed
+    private initBluetooth() {
+      this.BluetoothLeWeb.initialize();
+    }
 }
