@@ -1,1 +1,12 @@
-{}
+{
+    "plugins": {
+        "BluetoothLe": {
+          "displayStrings": {
+            "scanning": "Scanning...",
+            "cancel": "Stop Scan",
+            "availableDevices": "Found Devices",
+            "noDeviceFound": "No Devices Found"
+          }
+        }
+      }
+}

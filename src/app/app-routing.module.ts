@@ -3,13 +3,17 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
   {
-    path: 'home',
-    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
+    path: '',
+    redirectTo: 'ble-device-list',
+    pathMatch: 'full'
   },
   {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full'
+    path: 'ble-device-list',
+    loadChildren: () => import('./ble-device-list/ble-device-list.module').then( m => m.BleDeviceListPageModule)
+  },
+  {
+    path: 'ble-device-info',
+    loadChildren: () => import('./ble-device-info/ble-device-info.module').then( m => m.BleDeviceInfoPageModule)
   },
 ];
 
@@ -19,4 +23,5 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {
+}
