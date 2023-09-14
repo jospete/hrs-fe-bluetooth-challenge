@@ -1,5 +1,10 @@
+export function byteToHex(byte: number): string {
+    return (byte & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+}
+
 export function isValidHexString(input: string): boolean {
     return typeof input === 'string'
+    && input.length > 0
     && input.length % 2 === 0
     && !input.match(/[^A-Fa-f0-9]/);
 }
