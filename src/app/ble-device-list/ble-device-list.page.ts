@@ -100,7 +100,7 @@ export class BleDeviceListPage {
 
   public async selectDevice(device: BluetoothDevice): Promise<void> {
 
-    const deviceDisplayName = device.name || device.id;
+    const deviceDisplayName = device.displayName;
     this.logger.trace(`selectDevice() -> ${deviceDisplayName}`);
     const spinner = await this.loadingController.create({message: `Connecting to ${deviceDisplayName}...`});
 

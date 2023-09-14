@@ -1,18 +1,90 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button (click)="disconnect()"></ion-back-button>
+      <ion-back-button></ion-back-button>
     </ion-buttons>
     <ion-title>
-      Device Info
+      {{device.displayName}}
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">ble-device-info</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+
+  <ion-item-divider>
+    General
+  </ion-item-divider>
+
+  <ion-item>
+    <ion-label>
+      <h2>ID</h2>
+      <p>{{device.id}}</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>
+      <h2>RSSI</h2>
+      <p>{{device.rssi}}</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>
+      <h2>Connected</h2>
+      <p>{{device.connected ? 'Yes' : 'No'}}</p>
+    </ion-label>
+    <ion-button slot="end" *ngIf="!device.connected" [disabled]="reconnecting" (click)="tryReconnectDevice()">
+      Reconnect
+    </ion-button>
+  </ion-item>
+
+  <ion-item-divider>
+    Gatt Profile
+  </ion-item-divider>
+
+  <ng-container *ngFor="let endpoint of device.enumerateEndpoints() | async">
+    <ion-item lines="none">
+      <ion-label class="ion-text-wrap">
+        <h2>Path</h2>
+        <p>{{endpoint.path()}}</p>
+      </ion-label>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-label class="ion-text-wrap">
+        <h2>Value</h2>
+        <p>{{endpoint.hexValue || 'N/A'}}</p>
+      </ion-label>
+    </ion-item>
+    <ion-item lines="none" *ngIf="endpoint.writable">
+      <ion-label position="stacked">
+        <h2>New Value (hex)</h2>
+      </ion-label>
+      <ion-input type="text" [(ngModel)]="endpoint.hexInput"></ion-input>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-label>
+        <p *ngIf="endpoint.hexInput && !endpoint.hasValidHexInput">
+          <ion-text color="danger">
+            Input must be a valid hex value like AABBCC
+          </ion-text>
+        </p>
+      </ion-label>
+    </ion-item>
+    <ion-item>
+      <ion-button (click)="endpoint.read()" *ngIf="endpoint.readable">
+        Read
+      </ion-button>
+      <ion-button (click)="endpoint.writeHexInput()" *ngIf="endpoint.writable && endpoint.hasValidHexInput">
+        Write
+      </ion-button>
+      <ion-button (click)="endpoint.watch()" *ngIf="endpoint.subscribable && !endpoint.subscribed">
+        Subscribe
+      </ion-button>
+      <ion-button color="medium" (click)="endpoint.watch()" *ngIf="endpoint.subscribable && endpoint.subscribed">
+        Unsubscribe
+      </ion-button>
+    </ion-item>
+  </ng-container>
+
 </ion-content>
