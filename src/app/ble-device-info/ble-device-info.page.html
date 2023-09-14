@@ -63,7 +63,7 @@
       <ion-item lines="none">
         <ion-label class="ion-text-wrap">
           <h2>Value</h2>
-          <p>{{endpoint.hexValue || 'N/A'}}</p>
+          <p>{{(endpoint.hexValue$ | async) || 'N/A'}}</p>
         </ion-label>
       </ion-item>
       <ng-container *ngIf="endpoint.writable">
@@ -86,9 +86,12 @@
         <ion-button (click)="endpoint.watch()" *ngIf="endpoint.subscribable && !endpoint.subscribed">
           Subscribe
         </ion-button>
-        <ion-button color="medium" (click)="endpoint.watch()" *ngIf="endpoint.subscribable && endpoint.subscribed">
-          Unsubscribe
-        </ion-button>
+        <ng-container *ngIf="endpoint.subscribable && endpoint.subscribed">
+          <ion-button color="medium" (click)="endpoint.unwatch()">
+            Unsubscribe
+          </ion-button>
+        </ng-container>
+       
       </ion-item>
     </ng-container>
   </ng-template>

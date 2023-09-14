@@ -1,20 +1,29 @@
 import { BleCharacteristic, BleDescriptor, BleService, dataViewToHexString, dataViewToText } from "@capacitor-community/bluetooth-le";
 import { BluetoothDevice } from "./bluetooth-device";
-import { filter, map, tap } from "rxjs";
+import { BehaviorSubject, filter, map, merge, tap } from "rxjs";
 import { hexToDataView, isValidHexString } from "src/app/utility/convert";
 
 export class BluetoothDeviceEndpoint {
 
+    private readonly valueSubject = new BehaviorSubject<DataView | null>(null);
     private mSubscribed: boolean = false;
-
-    public value: DataView | null = null;
-    public hexInput: string = '';
 
     public readonly notifyValue$ = this.device.notifications$.pipe(
         filter(v => v.service === this.service.uuid && v.characteristic === this.characteristic.uuid),
         map(v => v.data),
-        tap(v => this.value = v)
+        tap(v => this.updateValue(v))
     );
+
+    public readonly value$ = merge(
+        this.valueSubject.asObservable(),
+        this.notifyValue$
+    );
+
+    public readonly hexValue$ = this.value$.pipe(
+        map(() => this.hexValue)
+    );
+
+    public hexInput: string = '';
 
     constructor(
         public readonly device: BluetoothDevice,
@@ -22,6 +31,10 @@ export class BluetoothDeviceEndpoint {
         public readonly characteristic: BleCharacteristic,
         public readonly descriptor?: BleDescriptor
     ) {
+    }
+
+    public get value(): DataView | null {
+        return this.valueSubject.value;
     }
 
     public get readable(): boolean {
@@ -70,13 +83,13 @@ export class BluetoothDeviceEndpoint {
     }
 
     public async read(): Promise<DataView> {
-        this.value = await this.device.read(this.service.uuid, this.characteristic.uuid);
-        return this.value;
+        this.updateValue(await this.device.read(this.service.uuid, this.characteristic.uuid));
+        return this.value!;
     }
 
     public async write(value: DataView): Promise<void> {
         await this.device.write(this.service.uuid, this.characteristic.uuid, value);
-        this.value = value;
+        this.updateValue(value);
     }
 
     public async readHex(): Promise<string> {
@@ -92,5 +105,9 @@ export class BluetoothDeviceEndpoint {
     public async writeHexInput(): Promise<void> {
         const bufferValue = hexToDataView(this.hexInput);
         await this.write(bufferValue);
+    }
+
+    private updateValue(value: DataView | null): void {
+        this.valueSubject.next(value);
     }
 }

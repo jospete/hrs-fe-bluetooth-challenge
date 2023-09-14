@@ -1,11 +1,11 @@
-import { Component, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone } from '@angular/core';
 import { Logger } from '@obsidize/rx-console';
 import { AlertController } from '@ionic/angular';
+import { delay, tap } from 'rxjs';
 
 import { BluetoothDevice } from '../models/bluetooth/bluetooth-device';
 import { BluetoothDeviceService } from '../services/bluetooth/bluetooth-device.service';
 import { BluetoothDeviceEndpoint } from '../models/bluetooth/bluetooth-device-endpoint';
-import { runInsideZone } from '../utility/run-inside-zone';
 
 @Component({
   selector: 'app-ble-device-info',
@@ -21,12 +21,15 @@ export class BleDeviceInfoPage {
 
   public endpoints: BluetoothDeviceEndpoint[] = [];
 
+  // Awful hack to get view to respond to notify callbacks from BLE plugin.
+  // Better route here is probably push detection strategy (or better yet, signals).
   public readonly deviceNotifications$ = this.device.notifications$.pipe(
-    runInsideZone(this.zone)
+    delay(100),
+    tap(() => this.cdr.detectChanges())
   );
 
   constructor(
-    private readonly zone: NgZone,
+    private readonly cdr: ChangeDetectorRef,
     private readonly alertController: AlertController,
     private readonly bluetoothDeviceService: BluetoothDeviceService
   ) {
