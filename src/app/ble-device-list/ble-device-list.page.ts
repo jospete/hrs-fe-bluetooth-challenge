@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
 import {BluetoothDevice} from 'src/app/models/bluetooth/bluetooth-device';
 import { BluetoothDeviceScanState, BluetoothDeviceService } from '../services/bluetooth/bluetooth-device.service';
 import { Logger } from '@obsidize/rx-console';
-import { AlertController, NavController } from '@ionic/angular';
+import { AlertController, LoadingController, NavController } from '@ionic/angular';
 
 enum ScanDisplayState {
   INTRO = 'INTRO',
@@ -36,6 +36,7 @@ export class BleDeviceListPage {
   constructor(
     private readonly navController: NavController,
     private readonly alertController: AlertController,
+    private readonly loadingController: LoadingController,
     private readonly bluetoothDeviceService: BluetoothDeviceService,
   ) {
   }
@@ -99,14 +100,19 @@ export class BleDeviceListPage {
 
   public async selectDevice(device: BluetoothDevice): Promise<void> {
 
-    this.logger.trace(`selectDevice() -> ${device.name} | ${device.id}`);
+    const deviceDisplayName = device.name || device.id;
+    this.logger.trace(`selectDevice() -> ${deviceDisplayName}`);
+    const spinner = await this.loadingController.create({message: `Connecting to ${deviceDisplayName}...`});
 
     try {
+      await spinner.present();
       await this.bluetoothDeviceService.connectDevice(device);
+      await spinner.dismiss();
       await this.navController.navigateForward(`/ble-device-info`);
 
     } catch (e) {
       this.logger.error(`failed to connect device: `, e);
+      await spinner.dismiss();
       await this.showDeviceConnectionFailure(e);
     }
   }
@@ -125,6 +131,8 @@ export class BleDeviceListPage {
   }
 
   private resetDisplayState(): void {
+    this.bluetoothDeviceService.resetState()
+      .catch(e => this.logger.warn(`failed to reset BLE service state -> `, e));
     this.deviceIdSet.clear();
     this.mDeviceList = [];
     this.scanStateSubject.next(ScanDisplayState.INTRO);

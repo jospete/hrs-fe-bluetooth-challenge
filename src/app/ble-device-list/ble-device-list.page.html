@@ -4,8 +4,8 @@
       Device List
     </ion-title>
     <ion-buttons slot="end" class="ion-margin-end">
-      <ion-button (click)="scan()" [disabled]="scanning">
-        <ion-icon slot="start" name="bluetooth"></ion-icon>
+      <ion-button (click)="scan()" [disabled]="scanning" color="success">
+        <ion-icon slot="start" name="bluetooth" color="success"></ion-icon>
         Scan
       </ion-button>
     </ion-buttons>
@@ -48,15 +48,17 @@
             <ion-spinner></ion-spinner>
           </ion-item>
         </ng-container>
-        <ion-item *ngFor="let device of devices$ | async" [detail]="true" [button]="true" (click)="selectDevice(device)">
-          <ion-note slot="start">
-            {{device.rssi}}
-          </ion-note>
-          <ion-label>
-            <h2>{{device.name}}</h2>
-            <p>{{device.id}}</p>
-          </ion-label>
-        </ion-item>
+        <ng-container *ngIf="devices$ | async as deviceList">
+          <ion-item *ngFor="let device of deviceList" [detail]="true" [button]="true" (click)="selectDevice(device)">
+            <ion-note slot="start">
+              {{device.rssi}}
+            </ion-note>
+            <ion-label>
+              <h2>{{device.name}}</h2>
+              <p>{{device.id}}</p>
+            </ion-label>
+          </ion-item>
+        </ng-container>
       </ion-list>
     </ng-container>
 

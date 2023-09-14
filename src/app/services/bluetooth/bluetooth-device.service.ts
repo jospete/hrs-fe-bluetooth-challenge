@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Logger } from '@obsidize/rx-console';
 import { BehaviorSubject, Observable, Subject, filter, map } from 'rxjs';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { BluetoothDevice } from './../../models/bluetooth/bluetooth-device';
 import { sleep } from 'src/app/utility/sleep';
+import { runInsideZone } from 'src/app/utility/run-inside-zone';
 
 export enum BluetoothDeviceScanState {
   NONE = 'NONE',
@@ -31,12 +32,16 @@ export class BluetoothDeviceService {
 
   public readonly scannedDevices$: Observable<BluetoothDevice> = this.scanResultSubject.asObservable().pipe(
     map(scanResult => this.consumeScanResult(scanResult)!),
-    filter(device => device?.isTargetDevice)
+    filter(device => device?.isTargetDevice),
+    runInsideZone(this.zone)
   );
 
   private mConnectedDevice: BluetoothDevice | null = null;
 
-  constructor() { }
+  constructor(
+    private readonly zone: NgZone
+  ) {
+  }
 
   public get connectedDevice(): BluetoothDevice | null {
     return this.mConnectedDevice;
@@ -62,9 +67,18 @@ export class BluetoothDeviceService {
   }
 
   public async resetState(): Promise<void> {
+
     this.logger.debug(`resetState()`);
-    await this.stopScan();
-    await this.clearCache();
+    
+    try {
+      await this.stopScan();
+      await this.disconnectCurrentDevice();
+      await this.clearCache();
+
+    } catch (e) {
+      this.logger.warn(`failed some reset state actions -> `, e);
+    }
+
     this.scanStateSubject.next(BluetoothDeviceScanState.NONE);
   }
 
@@ -76,6 +90,7 @@ export class BluetoothDeviceService {
 
   public async connectDevice(device: BluetoothDevice): Promise<void> {
     this.logger.debug(`connectDevice() `, device.name);
+    await this.stopScan();
     await device.connect();
     this.mConnectedDevice = device;
   }
