@@ -33,7 +33,8 @@ export class BluetoothDeviceEndpoint {
     }
 
     public get subscribable(): boolean {
-        return this.characteristic.properties.notify;
+        return this.characteristic.properties.notify
+            || this.characteristic.properties.indicate;
     }
 
     public get subscribed(): boolean {

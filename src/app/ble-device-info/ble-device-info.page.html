@@ -11,6 +11,9 @@
 
 <ion-content class="ion-padding">
 
+  <!-- Hack to get view to re-render when notifications come back over BLE -->
+  <ng-container *ngIf="deviceNotifications$ | async"></ng-container>
+
   <ion-item-divider>
     General
   </ion-item-divider>
@@ -43,48 +46,51 @@
     Gatt Profile
   </ion-item-divider>
 
-  <ng-container *ngFor="let endpoint of device.enumerateEndpoints() | async">
-    <ion-item lines="none">
-      <ion-label class="ion-text-wrap">
-        <h2>Path</h2>
-        <p>{{endpoint.path()}}</p>
-      </ion-label>
-    </ion-item>
-    <ion-item lines="none">
-      <ion-label class="ion-text-wrap">
-        <h2>Value</h2>
-        <p>{{endpoint.hexValue || 'N/A'}}</p>
-      </ion-label>
-    </ion-item>
-    <ion-item lines="none" *ngIf="endpoint.writable">
-      <ion-label position="stacked">
-        <h2>New Value (hex)</h2>
-      </ion-label>
-      <ion-input type="text" [(ngModel)]="endpoint.hexInput"></ion-input>
-    </ion-item>
-    <ion-item lines="none">
-      <ion-label>
+  <ng-container *ngIf="!endpoints || endpoints.length === 0; else deviceEndpointList">
+    <ion-button [disabled]="loadingEndpoints" (click)="loadEndpoints()">
+      Load Endpoints
+    </ion-button>
+  </ng-container>
+
+  <ng-template #deviceEndpointList>
+    <ng-container *ngFor="let endpoint of endpoints">
+      <ion-item lines="none">
+        <ion-label class="ion-text-wrap">
+          <h2>Path</h2>
+          <p>{{endpoint.path()}}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label class="ion-text-wrap">
+          <h2>Value</h2>
+          <p>{{endpoint.hexValue || 'N/A'}}</p>
+        </ion-label>
+      </ion-item>
+      <ng-container *ngIf="endpoint.writable">
+        <ion-item lines="none">
+          <ion-input type="text" [(ngModel)]="endpoint.hexInput" label="Write Value (Hex)" placeholder="112233AABBCC"></ion-input>
+        </ion-item>
         <p *ngIf="endpoint.hexInput && !endpoint.hasValidHexInput">
           <ion-text color="danger">
             Input must be a valid hex value like AABBCC
           </ion-text>
         </p>
-      </ion-label>
-    </ion-item>
-    <ion-item>
-      <ion-button (click)="endpoint.read()" *ngIf="endpoint.readable">
-        Read
-      </ion-button>
-      <ion-button (click)="endpoint.writeHexInput()" *ngIf="endpoint.writable && endpoint.hasValidHexInput">
-        Write
-      </ion-button>
-      <ion-button (click)="endpoint.watch()" *ngIf="endpoint.subscribable && !endpoint.subscribed">
-        Subscribe
-      </ion-button>
-      <ion-button color="medium" (click)="endpoint.watch()" *ngIf="endpoint.subscribable && endpoint.subscribed">
-        Unsubscribe
-      </ion-button>
-    </ion-item>
-  </ng-container>
+      </ng-container>
+      <ion-item>
+        <ion-button (click)="endpoint.read()" *ngIf="endpoint.readable">
+          Read
+        </ion-button>
+        <ion-button (click)="endpoint.writeHexInput()" *ngIf="endpoint.writable" [disabled]="!endpoint.hasValidHexInput">
+          Write
+        </ion-button>
+        <ion-button (click)="endpoint.watch()" *ngIf="endpoint.subscribable && !endpoint.subscribed">
+          Subscribe
+        </ion-button>
+        <ion-button color="medium" (click)="endpoint.watch()" *ngIf="endpoint.subscribable && endpoint.subscribed">
+          Unsubscribe
+        </ion-button>
+      </ion-item>
+    </ng-container>
+  </ng-template>
 
 </ion-content>

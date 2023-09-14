@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { Logger } from '@obsidize/rx-console';
 import { AlertController } from '@ionic/angular';
 
 import { BluetoothDevice } from '../models/bluetooth/bluetooth-device';
 import { BluetoothDeviceService } from '../services/bluetooth/bluetooth-device.service';
+import { BluetoothDeviceEndpoint } from '../models/bluetooth/bluetooth-device-endpoint';
+import { runInsideZone } from '../utility/run-inside-zone';
 
 @Component({
   selector: 'app-ble-device-info',
@@ -15,8 +17,16 @@ export class BleDeviceInfoPage {
   private readonly logger = new Logger(`BleDeviceInfoPage`);
 
   private mReconnecting: boolean = false;
+  private mLoadingEndpoints: boolean = false;
+
+  public endpoints: BluetoothDeviceEndpoint[] = [];
+
+  public readonly deviceNotifications$ = this.device.notifications$.pipe(
+    runInsideZone(this.zone)
+  );
 
   constructor(
+    private readonly zone: NgZone,
     private readonly alertController: AlertController,
     private readonly bluetoothDeviceService: BluetoothDeviceService
   ) {
@@ -24,6 +34,10 @@ export class BleDeviceInfoPage {
 
   public get reconnecting(): boolean {
     return this.mReconnecting;
+  }
+
+  public get loadingEndpoints(): boolean {
+    return this.mLoadingEndpoints;
   }
 
   public get device(): BluetoothDevice {
@@ -43,6 +57,8 @@ export class BleDeviceInfoPage {
       this.logger.warn(`ignoring duplicate call`);
       return;
     }
+
+    this.mReconnecting = true;
 
     try {
       await this.device.connect();
@@ -68,8 +84,38 @@ export class BleDeviceInfoPage {
     await dialog.present();
   }
 
-  private async discoverDeviceEndpoints(): Promise<void> {
+  public async loadEndpoints(): Promise<void> {
 
-    this.logger.debug(`discoverDeviceEndpoints()`);
+    this.logger.debug(`loadEndpoints()`);
+
+    if (this.mLoadingEndpoints) {
+      this.logger.warn(`ignoring duplicate UI call`);
+      return;
+    }
+
+    this.mLoadingEndpoints = true;
+
+    try {
+      this.endpoints = await this.device.enumerateEndpoints();
+      this.mLoadingEndpoints = false;
+
+    } catch (e) {
+      this.logger.error(`failed to load endpoints! -> `, e);
+      this.mLoadingEndpoints = false;
+      await this.showEndpointLoadError(e);
+    }
+  }
+
+  private async showEndpointLoadError(error: any): Promise<void> {
+
+    const dialog = await this.alertController.create({
+      header: `Error`,
+      message: `Failed to load device endpoints: ${error}`,
+      buttons: [
+        `OK`
+      ]
+    });
+
+    await dialog.present();
   }
 }
